@@ -45,9 +45,9 @@ class ChampionItemSet():
     ]
 
     TRINKETS = [
-        {'id': '3340', 'count': 1}, #  Warding Totem
-        {'id': '3341', 'count': 1}, #  Sweeping Lens
-        {'id': '3342', 'count': 1}, #  Scrying Orb
+        {'id': '3340', 'count': 1},  # Warding Totem
+        {'id': '3341', 'count': 1},  # Sweeping Lens
+        {'id': '3342', 'count': 1},  # Scrying Orb
     ]
 
     def __init__(self, url, patch_version=None):
@@ -75,7 +75,7 @@ class ChampionItemSet():
 
         return block
 
-    def get_skills(self, build_data): 
+    def get_skills(self, build_data):
         skill_order = '-'.join(build_data['order']).translate(self.SKILL_MAP)
 
         block = {
@@ -135,7 +135,7 @@ class ChampionItemSet():
         file_path = os.path.join(dest_dir, filename)
         with open(file_path, 'w') as f:
             json.dump(item_set, f)
-        
+
 
 if __name__ == "__main__":
     parser = ChampionGGParser()
