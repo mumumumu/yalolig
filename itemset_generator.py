@@ -15,13 +15,13 @@ def open_as_firefox(url):
 
 
 class ChampionGGParser(HTMLParser):
-    champion_urls = []
+    champion_urls = set()
     patch_version = None
 
     def handle_starttag(self, tag, attrs):
         for attr, value in attrs:
             if attr == 'href' and re.match('/champion/\w+/\w+', value):
-                self.champion_urls.append(value)
+                self.champion_urls.add(value)
 
     def handle_data(self, data):
         if re.match('\d\.\d', data):
@@ -48,6 +48,13 @@ class ChampionItemSet():
         {'id': '3340', 'count': 1},  # Warding Totem
         {'id': '3341', 'count': 1},  # Sweeping Lens
         {'id': '3342', 'count': 1},  # Scrying Orb
+    ]
+
+    UPGRADED_TRINKETS = [
+        {'id': '3361', 'count': 1},  # Greater Stealth Totem
+        {'id': '3362', 'count': 1},  # Greater Vision Totem
+        {'id': '3364', 'count': 1},  # Oracle's Lens
+        {'id': '3363', 'count': 1},  # Farsight Orb
     ]
 
     def __init__(self, url, patch_version=None):
@@ -77,13 +84,9 @@ class ChampionItemSet():
 
     def get_skills(self, build_data):
         skill_order = '-'.join(build_data['order']).translate(self.SKILL_MAP)
+        formatted_skill_order = self.NAME_FORMAT.format(skill_order, build_data['winPercent'], build_data['games'])
 
-        block = {
-            'items': self.CONSUMABLES,
-            'type': self.NAME_FORMAT.format(skill_order, build_data['winPercent'], build_data['games'])
-        }
-
-        return block
+        return formatted_skill_order
 
     def generate_item_set(self):
         json_data = self.fetch_json_data()
@@ -101,8 +104,8 @@ class ChampionItemSet():
         if json_data['items']['highestWinPercent']['items']:
             blocks.append(self.get_items('Highest Win Rate Build', json_data['items']['highestWinPercent']))
 
-        blocks.append(self.get_skills(json_data['skills']['mostGames']))
-        blocks.append(self.get_skills(json_data['skills']['highestWinPercent']))
+        blocks.append({'items': self.CONSUMABLES, 'type': self.get_skills(json_data['skills']['mostGames'])})
+        blocks.append({'items': self.UPGRADED_TRINKETS, 'type': self.get_skills(json_data['skills']['highestWinPercent'])})
 
         item_set = {
             'map': 'any',
@@ -140,6 +143,6 @@ class ChampionItemSet():
 if __name__ == "__main__":
     parser = ChampionGGParser()
     parser.feed(open_as_firefox(BASE_URL))
-    for url in parser.champion_urls:
+    for url in sorted(parser.champion_urls):
         print('Scraping {}'.format(BASE_URL + url))
         ChampionItemSet(url, patch_version=parser.patch_version).save_to_file()
